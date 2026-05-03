@@ -119,23 +119,12 @@ export default function ResearchPage() {
 
       if (!reader) throw new Error('No response stream')
 
+      // Route returns plain text stream — read chunks directly
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-
         const chunk = decoder.decode(value, { stream: true })
-        // Parse AI SDK data stream format: lines starting with "0:"
-        const lines = chunk.split('\n')
-        for (const line of lines) {
-          if (line.startsWith('0:')) {
-            try {
-              const text = JSON.parse(line.slice(2))
-              setAiAnalysis(prev => prev + text)
-            } catch {
-              // skip malformed chunks
-            }
-          }
-        }
+        if (chunk) setAiAnalysis(prev => prev + chunk)
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return

@@ -119,19 +119,12 @@ export function RebalancingTool({ allocations, totalValue, holdings }: Rebalanci
       const decoder = new TextDecoder()
       if (!reader) throw new Error('No response stream')
 
+      // Route returns plain text stream — read chunks directly
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         const chunk = decoder.decode(value, { stream: true })
-        // Parse AI SDK data stream: lines starting with "0:"
-        for (const line of chunk.split('\n')) {
-          if (line.startsWith('0:')) {
-            try {
-              const text = JSON.parse(line.slice(2))
-              setAiResponse(prev => prev + text)
-            } catch { /* skip malformed */ }
-          }
-        }
+        if (chunk) setAiResponse(prev => prev + chunk)
       }
     } catch (err: unknown) {
       setAiError(err instanceof Error ? err.message : 'AI request failed')

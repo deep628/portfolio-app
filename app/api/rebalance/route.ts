@@ -29,7 +29,6 @@ Use US Dollar ($) symbol for all monetary values. Be specific with numbers.`
 export async function POST(req: Request) {
   const aiGatewayKey = getAIGatewayKey()
 
-  // BUG 6 FIX: check for undefined/null, not the string 'MISSING_KEY'
   if (!aiGatewayKey) {
     return NextResponse.json(
       { error: 'AI Gateway key not configured. Add AI_GATEWAY_KEY to your Vercel environment variables.' },
@@ -45,20 +44,28 @@ ${JSON.stringify(holdings, null, 2)}
 
 Use this portfolio data to provide specific, actionable advice. All monetary values should be in US Dollars ($).
 `
-
-  // BUG 2 FIX: use createOpenAI provider pointed at Vercel AI Gateway
-  // instead of passing a plain model string to streamText
   const gateway = createOpenAI({
     apiKey: aiGatewayKey,
     baseURL: 'https://ai-gateway.vercel.sh/v1',
   })
 
+  const userMessage = Array.isArray(messages) && messages.length > 0
+    ? messages[messages.length - 1].content
+    : 'Analyze my portfolio and suggest rebalancing actions.'
+
   const result = streamText({
     model: gateway('anthropic/claude-sonnet-4-20250514'),
     system: SYSTEM_PROMPT + '\n\n' + holdingsContext,
-    messages,
+    messages: [{ role: 'user', content: userMessage }],
     abortSignal: req.signal,
   })
 
-  return result.toDataStreamResponse()
+  // Plain text stream — matches what the client reads
+  return new Response(result.textStream, {
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  })
 }
