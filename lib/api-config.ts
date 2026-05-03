@@ -12,9 +12,9 @@
 /**
  * Vercel AI Gateway API Key
  * Used for: AI-powered rebalancing and stock research
- * Set via: VERCEL_AI_GATEWAY_KEY environment variable
+ * Set via: AI_GATEWAY_API_KEY environment variable
  */
-export const getAIGatewayKey = () => process.env.VERCEL_AI_GATEWAY_KEY
+export const getAIGatewayKey = () => process.env.AI_GATEWAY_API_KEY
 
 /**
  * NewsAPI Key
