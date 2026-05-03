@@ -1,8 +1,6 @@
 import { streamText } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
-import { NextResponse } from 'next/server'
 import type { StockInfo } from '../stock-info/route'
-import { getAIGatewayKey, AI_CONFIG } from '@/lib/api-config'
+import { AI_CONFIG } from '@/lib/api-config'
 
 export const maxDuration = AI_CONFIG.MAX_DURATION
 
@@ -57,16 +55,6 @@ IMPORTANT: You MUST format your response EXACTLY as follows:
 Be data-driven using the provided financials. Use US Dollars ($) for all values. Be specific with numbers and percentages.`
 
 export async function POST(req: Request) {
-  const aiGatewayKey = getAIGatewayKey()
-
-  // BUG 6 FIX: check for undefined/null
-  if (!aiGatewayKey) {
-    return NextResponse.json(
-      { error: 'AI Gateway key not configured. Add VERCEL_AI_GATEWAY_KEY to your Vercel environment variables.' },
-      { status: 500 }
-    )
-  }
-
   const { stockInfo }: { stockInfo: StockInfo } = await req.json()
 
   // Format large numbers in billions/millions
@@ -142,14 +130,8 @@ Analyst Recommendations:
 Based on this financial data, provide a comprehensive 7-point analysis with specific scores and recommendations.
 `
 
-  // BUG 2 FIX: use createOpenAI provider pointed at Vercel AI Gateway
-  const gateway = createOpenAI({
-    apiKey: aiGatewayKey,
-    baseURL: 'https://ai-gateway.vercel.sh/v1',
-  })
-
   const result = streamText({
-    model: gateway('anthropic/claude-sonnet-4-20250514'),
+    model: 'anthropic/claude-sonnet-4-20250514',
     system: SYSTEM_PROMPT,
     prompt: financialContext,
     abortSignal: req.signal,

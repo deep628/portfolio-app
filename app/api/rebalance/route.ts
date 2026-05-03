@@ -1,7 +1,5 @@
 import { streamText } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
-import { NextResponse } from 'next/server'
-import { getAIGatewayKey, AI_CONFIG } from '@/lib/api-config'
+import { AI_CONFIG } from '@/lib/api-config'
 
 export const maxDuration = AI_CONFIG.MAX_DURATION
 
@@ -27,16 +25,6 @@ IMPORTANT: Always format your response in the following structure:
 Use US Dollar ($) symbol for all monetary values. Be specific with numbers.`
 
 export async function POST(req: Request) {
-  const aiGatewayKey = getAIGatewayKey()
-
-  // BUG 6 FIX: check for undefined/null, not the string 'MISSING_KEY'
-  if (!aiGatewayKey) {
-    return NextResponse.json(
-      { error: 'AI Gateway key not configured. Add VERCEL_AI_GATEWAY_KEY to your Vercel environment variables.' },
-      { status: 500 }
-    )
-  }
-
   const { messages, holdings } = await req.json()
 
   const holdingsContext = `
@@ -46,15 +34,8 @@ ${JSON.stringify(holdings, null, 2)}
 Use this portfolio data to provide specific, actionable advice. All monetary values should be in US Dollars ($).
 `
 
-  // BUG 2 FIX: use createOpenAI provider pointed at Vercel AI Gateway
-  // instead of passing a plain model string to streamText
-  const gateway = createOpenAI({
-    apiKey: aiGatewayKey,
-    baseURL: 'https://ai-gateway.vercel.sh/v1',
-  })
-
   const result = streamText({
-    model: gateway('anthropic/claude-sonnet-4-20250514'),
+    model: 'anthropic/claude-sonnet-4-20250514',
     system: SYSTEM_PROMPT + '\n\n' + holdingsContext,
     messages,
     abortSignal: req.signal,
