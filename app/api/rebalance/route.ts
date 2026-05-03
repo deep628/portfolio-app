@@ -60,5 +60,5 @@ Use this portfolio data to provide specific, actionable advice. All monetary val
     abortSignal: req.signal,
   })
 
-  return result.toDataStreamResponse()
+  return result.toTextStreamResponse()
 }

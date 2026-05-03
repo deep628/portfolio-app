@@ -39,24 +39,24 @@ interface StockInfo {
   marketCap: number
   fiftyTwoWeekHigh: number
   fiftyTwoWeekLow: number
-  trailingPE: number
-  forwardPE: number
-  priceToBook: number
-  priceToSales: number
-  profitMargin: number
-  operatingMargin: number
-  returnOnEquity: number
-  returnOnAssets: number
-  debtToEquity: number
-  currentRatio: number
-  dividendYield: number
-  beta: number
-  eps: number
-  targetMeanPrice: number
-  targetHighPrice: number
-  targetLowPrice: number
-  numberOfAnalysts: number
-  recommendationKey: string
+  trailingPE: number | null
+  forwardPE: number | null
+  priceToBook: number | null
+  priceToSales: number | null
+  profitMargin: number | null
+  operatingMargin: number | null
+  returnOnEquity: number | null
+  returnOnAssets: number | null
+  debtToEquity: number | null
+  currentRatio: number | null
+  dividendYield: number | null
+  beta: number | null
+  eps: number | null
+  targetMeanPrice: number | null
+  targetHighPrice: number | null
+  targetLowPrice: number | null
+  numberOfAnalysts: number | null
+  recommendationKey: string | null
 }
 
 function formatUSD(value: number): string {
@@ -74,8 +74,8 @@ function formatMarketCap(value: number): string {
   return formatUSD(value)
 }
 
-function formatPercent(value: number | undefined): string {
-  if (value === undefined || isNaN(value)) return 'N/A'
+function formatPercent(value: number | null | undefined): string {
+  if (value == null || isNaN(value)) return 'N/A'
   return `${value.toFixed(2)}%`
 }
 
@@ -122,20 +122,8 @@ export default function ResearchPage() {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-
-        const chunk = decoder.decode(value, { stream: true })
-        // Parse AI SDK data stream format: lines starting with "0:"
-        const lines = chunk.split('\n')
-        for (const line of lines) {
-          if (line.startsWith('0:')) {
-            try {
-              const text = JSON.parse(line.slice(2))
-              setAiAnalysis(prev => prev + text)
-            } catch {
-              // skip malformed chunks
-            }
-          }
-        }
+        // toTextStreamResponse() emits raw text — append directly
+        setAiAnalysis(prev => prev + decoder.decode(value, { stream: true }))
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return
@@ -295,21 +283,21 @@ export default function ResearchPage() {
                 </div>
 
                 {/* Analyst Targets */}
-                {stockInfo.targetMeanPrice > 0 && (
+                {(stockInfo.targetMeanPrice ?? 0) > 0 && (
                   <div className="rounded-lg bg-muted/50 p-4">
                     <h4 className="font-semibold mb-3">Analyst Price Targets ({stockInfo.numberOfAnalysts} analysts)</h4>
                     <div className="grid grid-cols-3 gap-4 text-center">
                       <div>
                         <p className="text-sm text-muted-foreground">Low</p>
-                        <p className="font-semibold text-red-500">{formatUSD(stockInfo.targetLowPrice)}</p>
+                        <p className="font-semibold text-red-500">{formatUSD(stockInfo.targetLowPrice ?? 0)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Average</p>
-                        <p className="font-semibold">{formatUSD(stockInfo.targetMeanPrice)}</p>
+                        <p className="font-semibold">{formatUSD(stockInfo.targetMeanPrice ?? 0)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">High</p>
-                        <p className="font-semibold text-green-500">{formatUSD(stockInfo.targetHighPrice)}</p>
+                        <p className="font-semibold text-green-500">{formatUSD(stockInfo.targetHighPrice ?? 0)}</p>
                       </div>
                     </div>
                   </div>
@@ -399,7 +387,7 @@ export default function ResearchPage() {
                 <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <h3 className="text-lg font-semibold mb-2">Research a Stock</h3>
                 <p>Enter any US stock ticker to get live financial data + AI-powered 7-point analysis.</p>
-                <p className="text-sm mt-2">Try: AAPL · MSFT · GOOGL · NVDA · AMZN · JPM · XOM</p>
+                <p className="text-sm mt-2">Try: AAPL · MSFT · GOOGL · NVDA �� AMZN · JPM · XOM</p>
               </div>
             </CardContent>
           </Card>

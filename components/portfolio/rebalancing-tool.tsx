@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertTriangle, ArrowRight, Check, RefreshCw, TrendingDown, TrendingUp, Sparkles, Send, Loader2 } from 'lucide-react'
+import { AlertTriangle, ArrowRight, Check, TrendingDown, TrendingUp, Sparkles, Send, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -122,16 +122,8 @@ export function RebalancingTool({ allocations, totalValue, holdings }: Rebalanci
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        // Parse AI SDK data stream: lines starting with "0:"
-        for (const line of chunk.split('\n')) {
-          if (line.startsWith('0:')) {
-            try {
-              const text = JSON.parse(line.slice(2))
-              setAiResponse(prev => prev + text)
-            } catch { /* skip malformed */ }
-          }
-        }
+        // toTextStreamResponse() emits raw text — append directly
+        setAiResponse(prev => prev + decoder.decode(value, { stream: true }))
       }
     } catch (err: unknown) {
       setAiError(err instanceof Error ? err.message : 'AI request failed')

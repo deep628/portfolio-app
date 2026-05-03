@@ -79,61 +79,65 @@ export async function POST(req: Request) {
   }
 
   // Build context about the stock's financials
+  // Helper to safely call toFixed on number | null fields
+  const fmt = (n: number | null | undefined, digits = 2) =>
+    n != null ? n.toFixed(digits) : 'N/A'
+
   const financialContext = `
 Stock Financial Data for Analysis:
 ================================
 Ticker: ${stockInfo.ticker}
 Company Name: ${stockInfo.name}
-Current Price: $${stockInfo.price?.toFixed(2) || 'N/A'}
-Change: ${stockInfo.changePercent?.toFixed(2) || 'N/A'}%
+Current Price: $${fmt(stockInfo.price)}
+Change: ${fmt(stockInfo.changePercent)}%
 Exchange: ${stockInfo.exchange}
 Sector: ${stockInfo.sector}
 Industry: ${stockInfo.industry}
 
 Market Data:
 - Market Cap: ${formatLargeNumber(stockInfo.marketCap)}
-- 52-Week High: $${stockInfo.fiftyTwoWeekHigh?.toFixed(2) || 'N/A'}
-- 52-Week Low: $${stockInfo.fiftyTwoWeekLow?.toFixed(2) || 'N/A'}
+- 52-Week High: $${fmt(stockInfo.fiftyTwoWeekHigh)}
+- 52-Week Low: $${fmt(stockInfo.fiftyTwoWeekLow)}
 - Avg Volume: ${stockInfo.avgVolume?.toLocaleString() || 'N/A'}
-- Beta: ${stockInfo.beta?.toFixed(2) || 'N/A'}
+- Beta: ${fmt(stockInfo.beta)}
 
 Valuation Metrics:
-- P/E Ratio (TTM): ${stockInfo.trailingPE?.toFixed(2) || 'N/A'}
-- Forward P/E: ${stockInfo.forwardPE?.toFixed(2) || 'N/A'}
-- P/B Ratio: ${stockInfo.priceToBook?.toFixed(2) || 'N/A'}
-- P/S Ratio: ${stockInfo.priceToSales?.toFixed(2) || 'N/A'}
-- Enterprise Value: ${formatLargeNumber(stockInfo.enterpriseValue)}
+- P/E Ratio (TTM): ${fmt(stockInfo.trailingPE)}
+- Forward P/E: ${fmt(stockInfo.forwardPE)}
+- P/B Ratio: ${fmt(stockInfo.priceToBook)}
+- P/S Ratio: ${fmt(stockInfo.priceToSales)}
+- Enterprise Value: ${formatLargeNumber(stockInfo.enterpriseValue ?? undefined)}
 
 Profitability:
-- Profit Margin: ${stockInfo.profitMargin?.toFixed(2) || 'N/A'}%
-- Operating Margin: ${stockInfo.operatingMargin?.toFixed(2) || 'N/A'}%
-- ROE: ${stockInfo.returnOnEquity?.toFixed(2) || 'N/A'}%
-- ROA: ${stockInfo.returnOnAssets?.toFixed(2) || 'N/A'}%
+- Profit Margin: ${fmt(stockInfo.profitMargin)}%
+- Operating Margin: ${fmt(stockInfo.operatingMargin)}%
+- ROE: ${fmt(stockInfo.returnOnEquity)}%
+- ROA: ${fmt(stockInfo.returnOnAssets)}%
 
 Growth:
-- Revenue Growth: ${stockInfo.revenueGrowth?.toFixed(2) || 'N/A'}%
-- EPS: $${stockInfo.eps?.toFixed(2) || 'N/A'}
+- Revenue Growth: ${fmt(stockInfo.revenueGrowth)}%
+- EPS: $${fmt(stockInfo.eps)}
 
 Financial Health:
-- Debt to Equity: ${stockInfo.debtToEquity?.toFixed(2) || 'N/A'}
-- Current Ratio: ${stockInfo.currentRatio?.toFixed(2) || 'N/A'}
-- Quick Ratio: ${stockInfo.quickRatio?.toFixed(2) || 'N/A'}
+- Debt to Equity: ${fmt(stockInfo.debtToEquity)}
+- Current Ratio: ${fmt(stockInfo.currentRatio)}
+- Quick Ratio: ${fmt(stockInfo.quickRatio)}
 
 Cash Flow:
-- Free Cash Flow: ${formatLargeNumber(stockInfo.freeCashFlow)}
-- Operating Cash Flow: ${formatLargeNumber(stockInfo.operatingCashFlow)}
-- Total Cash: ${formatLargeNumber(stockInfo.totalCash)}
-- Total Debt: ${formatLargeNumber(stockInfo.totalDebt)}
+- Free Cash Flow: ${formatLargeNumber(stockInfo.freeCashFlow ?? undefined)}
+- Operating Cash Flow: ${formatLargeNumber(stockInfo.operatingCashFlow ?? undefined)}
+- Total Cash: ${formatLargeNumber(stockInfo.totalCash ?? undefined)}
+- Total Debt: ${formatLargeNumber(stockInfo.totalDebt ?? undefined)}
 
 Dividends:
-- Dividend Yield: ${stockInfo.dividendYield?.toFixed(2) || 'N/A'}%
+- Dividend Yield: ${fmt(stockInfo.dividendYield)}%
 
 Analyst Recommendations:
-- Target Price (Mean): $${stockInfo.targetMeanPrice?.toFixed(2) || 'N/A'}
-- Target Price (High): $${stockInfo.targetHighPrice?.toFixed(2) || 'N/A'}
-- Target Price (Low): $${stockInfo.targetLowPrice?.toFixed(2) || 'N/A'}
-- Number of Analysts: ${stockInfo.numberOfAnalysts || 'N/A'}
-- Recommendation: ${stockInfo.recommendationKey || 'N/A'}
+- Target Price (Mean): $${fmt(stockInfo.targetMeanPrice)}
+- Target Price (High): $${fmt(stockInfo.targetHighPrice)}
+- Target Price (Low): $${fmt(stockInfo.targetLowPrice)}
+- Number of Analysts: ${stockInfo.numberOfAnalysts ?? 'N/A'}
+- Recommendation: ${stockInfo.recommendationKey ?? 'N/A'}
 
 Based on this financial data, provide a comprehensive 7-point analysis with specific scores and recommendations.
 `
@@ -151,5 +155,5 @@ Based on this financial data, provide a comprehensive 7-point analysis with spec
     abortSignal: req.signal,
   })
 
-  return result.toDataStreamResponse()
+  return result.toTextStreamResponse()
 }
