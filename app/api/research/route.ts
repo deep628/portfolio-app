@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   // BUG 6 FIX: check for undefined/null
   if (!aiGatewayKey) {
     return NextResponse.json(
-      { error: 'AI Gateway key not configured. Add VERCEL_AI_GATEWAY_KEY to your Vercel environment variables.' },
+      { error: 'AI Gateway key not configured. Add AI_GATEWAY_KEY to your Vercel environment variables.' },
       { status: 500 }
     )
   }
